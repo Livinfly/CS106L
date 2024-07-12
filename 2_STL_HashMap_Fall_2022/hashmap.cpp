@@ -21,27 +21,27 @@ HashMap<K, M, H>::~HashMap() {
 }
 
 template <typename K, typename M, typename H>
-inline size_t HashMap<K, M, H>::size() {
+inline size_t HashMap<K, M, H>::size() const {
     return _size;
 }
 
 template <typename K, typename M, typename H>
-inline bool HashMap<K, M, H>::empty() {
+inline bool HashMap<K, M, H>::empty() const {
     return size() == 0;
 }
 
 template <typename K, typename M, typename H>
-inline float HashMap<K, M, H>::load_factor() {
+inline float HashMap<K, M, H>::load_factor() const {
     return static_cast<float>(size())/bucket_count();
 };
 
 template <typename K, typename M, typename H>
-inline size_t HashMap<K, M, H>::bucket_count() const{
+inline size_t HashMap<K, M, H>::bucket_count() const {
     return _buckets_array.size();
 };
 
 template <typename K, typename M, typename H>
-M& HashMap<K, M, H>::at(const K& key) {
+M& HashMap<K, M, H>::at(const K& key) const {
     auto [prev, node_found] = find_node(key);
             if (node_found == nullptr) {
         throw std::out_of_range("HashMap<K, M, H>::at: key not found");
@@ -50,7 +50,7 @@ M& HashMap<K, M, H>::at(const K& key) {
 }
 
 template <typename K, typename M, typename H>
-bool HashMap<K, M, H>::contains(const K& key) {
+bool HashMap<K, M, H>::contains(const K& key) const {
     return find_node(key).second != nullptr;
 }
 
@@ -67,6 +67,11 @@ void HashMap<K, M, H>::clear() {
 template <typename K, typename M, typename H>
 typename HashMap<K, M, H>::iterator HashMap<K, M, H>::find(const K& key) {
     return make_iterator(find_node(key).second);
+}
+
+template <typename K, typename M, typename H>
+typename HashMap<K, M, H>::const_iterator HashMap<K, M, H>::find(const K& key) const {
+    return static_cast<const_iterator>(const_cast<HashMap<K, M, H>*>(this)->find(key));
 }
 
 template <typename K, typename M, typename H>
@@ -127,6 +132,11 @@ typename HashMap<K, M, H>::iterator HashMap<K, M, H>::end() {
 }
 
 template <typename K, typename M, typename H>
+typename HashMap<K, M, H>::const_iterator HashMap<K, M, H>::end() const {
+    return static_cast<const_iterator>(const_cast<HashMap<K, M, H>*>(this)->end());
+}
+
+template <typename K, typename M, typename H>
 size_t HashMap<K, M, H>::first_not_empty_bucket() const {
     auto isNotNullptr = [ ](const auto& v){
         return v != nullptr;
@@ -143,6 +153,11 @@ typename HashMap<K, M, H>::iterator HashMap<K, M, H>::make_iterator(node* curr) 
     }
     size_t index = _hash_function(curr->value.first) % bucket_count();
     return {&_buckets_array, curr, index};
+}
+
+template <typename K, typename M, typename H>
+typename HashMap<K, M, H>::const_iterator HashMap<K, M, H>::make_iterator(node* curr) const {
+    return static_cast<const_iterator>(const_cast<HashMap<K, M, H>*>(this)->make_iterator());
 }
 
 template <typename K, typename M, typename H>
@@ -164,7 +179,7 @@ typename HashMap<K, M, H>::iterator HashMap<K, M, H>::erase(typename HashMap<K, 
 }
 
 template <typename K, typename M, typename H>
-    void HashMap<K, M, H>::debug() {
+    void HashMap<K, M, H>::debug() const {
     std::cout << std::setw(30) << std::setfill('-') << '\n' << std::setfill(' ')
           << "Printing debug information for your HashMap implementation\n"
           << "Size: " << size() << std::setw(15) << std::right
@@ -247,5 +262,50 @@ std::ostream& operator<<(std::ostream& os, const HashMap<K, M, H>& rhs) {
 }
 
 /* Begin Milestone 2: Special Member Functions */
+template<typename K, typename M, typename H> 
+HashMap<K, M, H>::HashMap(const HashMap& rhs) : HashMap(rhs.bucket_count(), rhs._hash_function) {
+    clear();
+    for(auto pair_value : rhs) {
+        insert(pair_value);
+    }
+}
 
+template<typename K, typename M, typename H>
+HashMap<K, M, H>& HashMap<K, M, H>::operator=(const HashMap& rhs) {
+    if(&rhs != this) {
+        clear();
+        for(auto pair_value : rhs) {
+            insert(pair_value);
+        }
+    }
+    return *this;
+}
+
+template<typename K, typename M, typename H>
+HashMap<K, M, H>::HashMap(HashMap&& rhs) : 
+    _size{std::move(rhs._size)},
+    _hash_function{std::move(rhs._hash_function)},
+    _buckets_array{rhs.bucket_count(), nullptr} {
+        for(size_t i = 0; i < rhs.bucket_count(); i++) {
+            _buckets_array[i] = std::move(rhs._buckets_array[i]);
+            rhs._buckets_array[i] = nullptr;
+        }
+        // rhs._size = 0; 
+    }
+
+template<typename K, typename M, typename H>
+HashMap<K, M, H>& HashMap<K, M, H>::operator=(HashMap&& rhs) {
+    if(this != &rhs) {
+        clear();
+        _size = std::move(rhs._size);
+        _hash_function = std::move(rhs._hash_function);
+        _buckets_array.assign(rhs.bucket_count(), nullptr);
+        for(size_t i = 0; i < rhs.bucket_count(); i++) {
+            _buckets_array[i] = std::move(rhs._buckets_array[i]);
+            rhs._buckets_array[i] = nullptr;
+        }
+        // rhs._size = 0; ?? 
+    }
+    return *this;
+}
 /* end student code */

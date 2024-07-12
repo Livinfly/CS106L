@@ -1,2 +1,25 @@
 Assignment 3: STL HashMap (short answer questions)
-Names:
+Names: Meng
+0. 
+the 'curr' is the one of lists' head in _bucket_array,
+then 'curr' traverses the list in 'index' of _bucket_array,
+temp help to move the pair_value to new place.
+
+1.
+at() is just for the value of the existing key;
+[] not only gets the value of the existing key, 
+but also insert the value if no existing key.
+2. 
+m.find(k)
+The average time-complex for std::find is O(N) for HashMap;
+while the HashMap:find can make use of hash to find correct index,
+which helps find faster.
+3.
+When the variable goes out of scope then the destructor will release the resource.
+4.
+Traverse _bucket_array's lists.
+When traverse  to the end of the last list in _bucket_array.
+
+1.
+
+2.
